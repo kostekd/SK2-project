@@ -12,9 +12,16 @@
 #include <time.h>
 #include <pthread.h>
 
-#define SERVER_PORT 1234
+#define SERVER_PORT 1235
 #define QUEUE_SIZE 5
-#define BUF_SIZE 1024
+#define BUF_SIZE 100
+#define MAX_USERS 100
+#define MAX_USER_LENGTH 100
+
+//GLOBAL VARIABLES
+char* username[MAX_USERS];
+char* password[MAX_USERS];
+int countUsers = 0;
 
 //struktura zawierająca dane, które zostaną przekazane do wątku
 struct thread_data_t
@@ -22,10 +29,68 @@ struct thread_data_t
     int descriptor;
 };
 
-void readAndPrint(struct thread_data_t *th_data){
+void printUsers(){
+    for(int i=0 ; i<countUsers ; i++){
+        printf("%d\n", countUsers);
+        printf("Uzytkownik: -%s-%s-\n", username[i], password[i]);
+    }
+}
 
-    char buff[BUF_SIZE];
+int checkIfExists(char* login, char* pass) {
+    
+    
+    for(int i=0 ; i<countUsers ; i++){
+        printf("%s %s", login, username[i]);
+        if(strcmp(login, username[i]) == 0){
+            //printf("%s %s", login, username[i]);
+            if(strcmp(pass, password[i]) == 0){
+                return 1;
+            }
+        }
+    }
+    
+    return 0;
+}
+
+int readCurrentUser(struct thread_data_t *th_data){
+
+    char* buff = (char*)malloc(BUF_SIZE * sizeof(char));
+    char* buff1 = (char*)malloc(BUF_SIZE * sizeof(char));
+
     int readOutput = read(th_data->descriptor, buff, sizeof(buff));
+    char* login = (char*)malloc(readOutput);
+    // SPRAWDZAMY CZY readOutput dziala
+    for(int i=0 ; i<readOutput-1;i++){
+        login[i]= buff[i];
+    }
+
+    readOutput = read(th_data->descriptor, buff1, sizeof(buff1));
+    char* pass = (char*)malloc(readOutput);
+
+    for(int i=0 ; i<readOutput-1;i++){
+        pass[i]= buff1[i];
+    }
+    int result = checkIfExists(login, pass);
+
+    return result;
+
+}
+
+void readUsername(struct thread_data_t *th_data){
+
+    char* buff = (char*)malloc(BUF_SIZE * sizeof(char));
+    char* buff1 = (char*)malloc(BUF_SIZE * sizeof(char));
+
+    int readOutput = read(th_data->descriptor, buff, sizeof(buff));
+
+    //tutaj funkcja co sprawdza czy moze byc taki nick
+    username[countUsers] =  (char*)malloc(readOutput);
+    //username[countUsers] = buff;
+    for(int i=0 ; i<readOutput-1;i++){
+        username[countUsers][i] = buff[i];
+    }
+
+    printf("Rozmiar: %d", readOutput);
 
     if(readOutput > 0){
         printf("Nowa wiadomosc od clienta %d\n",th_data->descriptor);
@@ -33,16 +98,34 @@ void readAndPrint(struct thread_data_t *th_data){
     else{
         printf("Blad podczas odbioru wiadomosci");
     }
-    printf("Mowi client -> %s\n", buff);
+    printf("Rejestracja uzytkownika LOGIN -> %s", buff);
+
+    readOutput = read(th_data->descriptor, buff1, sizeof(buff1));
+    password[countUsers] =  (char*)malloc(readOutput);
+    //password[countUsers] = buff1;
+    for(int i=0 ; i<readOutput-1;i++){
+        password[countUsers][i] = buff1[i];
+    }
+
+    printf("Rozmiar: %d", readOutput);
+
+    if(readOutput > 0){
+        printf("Nowa wiadomosc od clienta %d\n",th_data->descriptor);
+    }
+    else{
+        printf("Blad podczas odbioru wiadomosci");
+    }
+    printf("Rejestracja uzytkownika HASLO-> %s", buff1);
+
+    countUsers++;
+    printUsers();
     
 }
 
-void respond(struct thread_data_t *th_data){
+void respondUsername(struct thread_data_t *th_data){
     char buff[11] = "Jebac Souse";
 
     int readOutput = write(th_data->descriptor, buff, sizeof(buff));
-
-    printf("ReadOutput: %d", readOutput);
     
     if(readOutput > 0){
         printf("Nowa wiadomosc dla clienta %d\n",th_data->descriptor);
@@ -53,18 +136,49 @@ void respond(struct thread_data_t *th_data){
     
 }
 
+void sendResult(struct thread_data_t *th_data, int d){
+    char buff[6] = "Supers";
+    char buff1[6] = "Szkoda";
+
+    int readOutput;
+
+    if(d == 1){
+        readOutput = write(th_data->descriptor, buff, sizeof(buff));
+    }
+    else if(d == 0){
+        readOutput = write(th_data->descriptor, buff1, sizeof(buff1));
+    }
+}
+
 //funkcja opisującą zachowanie wątku - musi przyjmować argument typu (void *) i zwracać (void *)
 void *ThreadBehavior(void *t_data)
 {
     pthread_detach(pthread_self());
     struct thread_data_t *th_data = (struct thread_data_t*)t_data;
+        char buff[BUF_SIZE];
 
     //dostęp do pól struktury: (*th_data).pole
     //TODO (przy zadaniu 1) klawiatura -> wysyłanie albo odbieranie -> wyświetlanie
+    int readOutput = read(th_data->descriptor, buff, sizeof(buff));
+    printf("Decyzja: %s\n", buff);
+    int decision = atoi(buff);
 
-    readAndPrint(th_data);
-    respond(th_data);
+    //REJESTRACJA
+    if(decision == 1){
+        readUsername(th_data);
+        respondUsername(th_data);
+    }
+    else if(decision == 2){
+        //NOT IMPLEMENTED
+        int result = readCurrentUser(th_data);
+        sendResult(th_data,result);
+    }
 
+    else{
+        printf("Blad wyboru");
+    }
+
+    //printUsers();
 
     pthread_exit(NULL);
 }
