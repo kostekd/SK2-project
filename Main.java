@@ -62,7 +62,7 @@ public class Main {
         String username, password, topic;
 
         //connection handlers
-        Socket clientSocket = new Socket("localhost", 1235);
+        Socket clientSocket = new Socket("localhost", 1234);
         BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
         InputStream is = clientSocket.getInputStream();
@@ -120,6 +120,11 @@ public class Main {
                             is.read(topicString);
                             //System.out.println(convertToString(topicString));
                             System.out.println(trimString(convertToString(topicString)));
+                            System.out.println("Ktory temat chcesz obserwowac(Podaj numer):");
+                            topic = scan.nextLine();
+                            writer.println(topic);
+                            writer.println(username);
+                            System.out.println("Done!");
                             break;
                     }
 
