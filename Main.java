@@ -15,21 +15,60 @@ public class Main {
         return tmp;
     }
 
+    public static void showOption(){
+        System.out.println("Witamy w Twitterze po wylewie");
+        System.out.println("Co chcialbys teraz zrobic?");
+        System.out.println("1.Dodaj nowy temat");
+        System.out.println("2.Zaobserwuj nowy temat");
+        System.out.println("3.Pokaz swoja tablice");
+        System.out.println("4.Napisz posta");
+        System.out.println("Twoj wybor:");
+    }
+
+    public static int trimNumber(String tmp) {
+        String result = "";
+        for(int i=0 ; i<tmp.length() ; i++){
+            if((int)tmp.charAt(i) >= 48 && (int)tmp.charAt(i) <= 57 ){
+                result += tmp.charAt(i);
+            }
+        }
+        return Integer.valueOf(result);
+    }
+
+    public static String trimString(String tmp){
+        String result = "1.";
+        int cnt = 1;
+        for(int i=0 ; i<tmp.length() ; i++){
+            if((int)tmp.charAt(i) != 0){
+                result += tmp.charAt(i);
+                if(tmp.charAt(i) == '\n'){
+                    cnt++;
+                    result += Integer.toString(cnt) + '.';
+                }
+            }
+        }
+        result = result.substring(0,result.length() - 3);
+        return result;
+    }
+
 
     public static void main(String[] args) throws IOException {
         //variables
         Scanner scan = new Scanner(System.in);
         String clientMessage = "";
         int firstChoice;
+        int optionChoice;
         String tmpString = "";
-        String username, password;
+        String username, password, topic;
 
         //connection handlers
         Socket clientSocket = new Socket("localhost", 1235);
         BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
         InputStream is = clientSocket.getInputStream();
-        byte[] buffer = new byte[11];
+        byte[] buffer = new byte[7];
+        byte[] number = new byte[2];
+        byte[] topicString = new byte[100000];
 
         System.out.println("Co chcesz teraz zrobic?");
         System.out.println("1.Rejestracja");
@@ -58,30 +97,43 @@ public class Main {
                 writer.println(password);
                 is.read(buffer);
                 System.out.println(convertToString(buffer));
+                String tmpNapis = convertToString(buffer);
+
+                //log in successful
+
+                if(tmpNapis.equals("Success") == true){
+                    showOption();
+                    optionChoice = Integer.valueOf(scan.nextLine());
+                    //sending the decision
+                    writer.println(optionChoice);
+                    switch(optionChoice){
+                        case 1:
+                            System.out.println("Nazwa tematu:");
+                            topic = scan.nextLine();
+                            writer.println(topic);
+                            break;
+                        case 2:
+                            System.out.println("Lista tematow");
+                            is.read(number);
+                            int n = trimNumber(convertToString(number));
+                            System.out.println(n);
+                            is.read(topicString);
+                            //System.out.println(convertToString(topicString));
+                            System.out.println(trimString(convertToString(topicString)));
+                            break;
+                    }
+
+
+                }
+                //failed to log in
+                else{
+
+                }
+
                 break;
         }
 
-
-/*
-        System.out.println("Co ty tam chcesz powiedziec:");
-        clientMessage = scan.nextLine();
-        writer.println(clientMessage);
-
- */
-/*
-        System.out.println("czekam1");
-        String serverMessage = reader.readLine();
-        System.out.println(serverMessage);
-        System.out.println("czekam2");
-
-
- */
-/*
-        InputStream is = clientSocket.getInputStream();
-        byte[] buffer = new byte[11];
-        is.read(buffer);
-        System.out.printf("%s",convertToString(buffer));
         clientSocket.close();
-*/
+
     }
 }
