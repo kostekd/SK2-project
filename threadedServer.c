@@ -17,11 +17,16 @@
 #define BUF_SIZE 100
 #define MAX_USERS 100
 #define MAX_USER_LENGTH 100
+#define MAX_TOPIC 100
 
 //GLOBAL VARIABLES
+int followTopic[MAX_TOPIC][MAX_TOPIC];
+int followCount[MAX_TOPIC];
 char* username[MAX_USERS];
 char* password[MAX_USERS];
+char* topic[MAX_TOPIC];
 int countUsers = 0;
+int countTopic = 0;
 
 //struktura zawierająca dane, które zostaną przekazane do wątku
 struct thread_data_t
@@ -29,9 +34,34 @@ struct thread_data_t
     int descriptor;
 };
 
+//add topic to database
+void addTopic(struct thread_data_t *th_data){
+
+    char* buff = (char*)malloc(BUF_SIZE * sizeof(char));
+
+    int readOutput = read(th_data->descriptor, buff, BUF_SIZE);
+
+    topic[countTopic] =  (char*)malloc(BUF_SIZE);
+    /*
+    for(int i=0 ; i<readOutput - 1 ; i++){
+        topic[countTopic][i] = buff[i];
+    }
+    */
+    strcpy(topic[countTopic],buff);
+
+    countTopic++;
+}
+
+void printTopics(){
+    printf("%d\n", countTopic);
+    for(int i=0 ; i<countTopic ; i++){
+        printf("Topic: -%s", topic[i]);
+    }
+}
+
 void printUsers(){
+    printf("%d\n", countUsers);
     for(int i=0 ; i<countUsers ; i++){
-        printf("%d\n", countUsers);
         printf("Uzytkownik: -%s-%s-\n", username[i], password[i]);
     }
 }
@@ -40,9 +70,7 @@ int checkIfExists(char* login, char* pass) {
     
     
     for(int i=0 ; i<countUsers ; i++){
-        printf("%s %s", login, username[i]);
         if(strcmp(login, username[i]) == 0){
-            //printf("%s %s", login, username[i]);
             if(strcmp(pass, password[i]) == 0){
                 return 1;
             }
@@ -118,7 +146,7 @@ void readUsername(struct thread_data_t *th_data){
     printf("Rejestracja uzytkownika HASLO-> %s", buff1);
 
     countUsers++;
-    printUsers();
+    //printUsers();
     
 }
 
@@ -137,8 +165,8 @@ void respondUsername(struct thread_data_t *th_data){
 }
 
 void sendResult(struct thread_data_t *th_data, int d){
-    char buff[6] = "Supers";
-    char buff1[6] = "Szkoda";
+    char buff[7] = "Success";
+    char buff1[7] = "Failure";
 
     int readOutput;
 
@@ -148,6 +176,7 @@ void sendResult(struct thread_data_t *th_data, int d){
     else if(d == 0){
         readOutput = write(th_data->descriptor, buff1, sizeof(buff1));
     }
+
 }
 
 //funkcja opisującą zachowanie wątku - musi przyjmować argument typu (void *) i zwracać (void *)
@@ -155,23 +184,62 @@ void *ThreadBehavior(void *t_data)
 {
     pthread_detach(pthread_self());
     struct thread_data_t *th_data = (struct thread_data_t*)t_data;
-        char buff[BUF_SIZE];
+    char buff[BUF_SIZE];
 
     //dostęp do pól struktury: (*th_data).pole
     //TODO (przy zadaniu 1) klawiatura -> wysyłanie albo odbieranie -> wyświetlanie
     int readOutput = read(th_data->descriptor, buff, sizeof(buff));
-    printf("Decyzja: %s\n", buff);
     int decision = atoi(buff);
+    printf("Decyzja INT: %d\n", decision);
 
     //REJESTRACJA
     if(decision == 1){
         readUsername(th_data);
         respondUsername(th_data);
     }
+    //LOGOWANIE
     else if(decision == 2){
-        //NOT IMPLEMENTED
+        printf("witamy w ifie \n");
+        //CHECK IF EXISTS IN THE SYSTEM
         int result = readCurrentUser(th_data);
         sendResult(th_data,result);
+
+        printUsers();
+        printf("Result int %d\n", result);
+        //FUNCTIONALITY
+        if(result == 1){
+            puts("Udalo sie zalogowac\n");
+            readOutput = read(th_data->descriptor, buff, sizeof(buff));
+            decision = atoi(buff);
+
+
+            //add new topic
+            if(decision == 1){
+                puts("Uzytkownik chce stworzyc temat\n");
+                addTopic(th_data);
+                puts("Temat pomyslnie dodany");
+                printTopics();
+            }
+            //sub topic
+            else if(decision == 2){
+                puts("Uzytkownik chce sub temat\n");
+                char* tmpCnt;
+                sprintf(tmpCnt, "%d",countTopic);
+                readOutput = write(th_data->descriptor, tmpCnt, sizeof(tmpCnt));
+                for(int i=0 ; i<countTopic ; i++){
+                    readOutput = write(th_data->descriptor, topic[i], BUF_SIZE);
+                }
+                puts("Udalo sie!\n");
+                
+            }
+            else{
+                puts("NOT IMPLEMENTED\n");
+            }
+        }
+        else{
+            puts("Blad podczas logowania");
+        }
+
     }
 
     else{
