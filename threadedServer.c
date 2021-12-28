@@ -12,7 +12,7 @@
 #include <time.h>
 #include <pthread.h>
 
-#define SERVER_PORT 1235
+#define SERVER_PORT 1234
 #define QUEUE_SIZE 5
 #define BUF_SIZE 100
 #define MAX_USERS 100
@@ -33,6 +33,23 @@ struct thread_data_t
 {
     int descriptor;
 };
+
+void fillZeros(){
+    for(int i=0 ; i<MAX_TOPIC ; i++){
+        followCount[i] = 0;
+    }
+}
+
+int returnIndex(char* tmp){
+    for(int i=0 ; i<countUsers ; i++){
+        printf("Porownywane: -%d-", strcmp(tmp,username[i]));
+        if(strcmp(tmp,username[i])==0){
+            return i;
+        }
+    }
+
+    return -1;
+}
 
 //add topic to database
 void addTopic(struct thread_data_t *th_data){
@@ -87,17 +104,23 @@ int readCurrentUser(struct thread_data_t *th_data){
 
     int readOutput = read(th_data->descriptor, buff, sizeof(buff));
     char* login = (char*)malloc(readOutput);
+    strcpy(login,buff);
     // SPRAWDZAMY CZY readOutput dziala
+    /*
     for(int i=0 ; i<readOutput-1;i++){
         login[i]= buff[i];
     }
+    */
 
     readOutput = read(th_data->descriptor, buff1, sizeof(buff1));
     char* pass = (char*)malloc(readOutput);
 
+    strcpy(pass,buff1);
+    /*
     for(int i=0 ; i<readOutput-1;i++){
         pass[i]= buff1[i];
     }
+    */
     int result = checkIfExists(login, pass);
 
     return result;
@@ -114,9 +137,12 @@ void readUsername(struct thread_data_t *th_data){
     //tutaj funkcja co sprawdza czy moze byc taki nick
     username[countUsers] =  (char*)malloc(readOutput);
     //username[countUsers] = buff;
+    strcpy(username[countUsers],buff);
+    /*
     for(int i=0 ; i<readOutput-1;i++){
         username[countUsers][i] = buff[i];
     }
+    */
 
     printf("Rozmiar: %d", readOutput);
 
@@ -131,9 +157,12 @@ void readUsername(struct thread_data_t *th_data){
     readOutput = read(th_data->descriptor, buff1, sizeof(buff1));
     password[countUsers] =  (char*)malloc(readOutput);
     //password[countUsers] = buff1;
+    strcpy(password[countUsers],buff1);
+    /*
     for(int i=0 ; i<readOutput-1;i++){
         password[countUsers][i] = buff1[i];
     }
+    */
 
     printf("Rozmiar: %d", readOutput);
 
@@ -229,6 +258,29 @@ void *ThreadBehavior(void *t_data)
                 for(int i=0 ; i<countTopic ; i++){
                     readOutput = write(th_data->descriptor, topic[i], BUF_SIZE);
                 }
+
+                //read decyzje tematu
+                readOutput = read(th_data->descriptor, buff, sizeof(buff));
+                decision = atoi(buff);
+
+                //read komu przypisac
+                char* buff3 = (char*)malloc(BUF_SIZE * sizeof(char));
+                readOutput = read(th_data->descriptor, buff3, sizeof(buff3));
+                /*
+                char* buff2 = (char*)malloc(readOutput);
+
+                for(int i=0 ; i<readOutput-1;i++){
+                    buff2[i] = buff[i];
+                }
+                */
+                int userIndex = returnIndex(buff3);
+
+                followTopic[userIndex][followCount[userIndex]] = decision - 1;
+                followCount[userIndex] += 1;
+
+                printf("Wybrany temat: %d\n", userIndex);
+                printf("Wybrany uzytkownik: %s\n", buff);
+
                 puts("Udalo sie!\n");
                 
             }
@@ -276,6 +328,7 @@ void handleConnection(int connection_socket_descriptor) {
 
 int main(int argc, char* argv[])
 {
+   fillZeros();
    int server_socket_descriptor;
    int connection_socket_descriptor;
    int bind_result;
