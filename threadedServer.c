@@ -163,30 +163,30 @@ void readUsername(struct thread_data_t *th_data){
     //username[countUsers] = buff;
     strcpy(username[countUsers],buff);
 
-    printf("Rozmiar: %d", readOutput);
+    //printf("Rozmiar: %d", readOutput);
 
     if(readOutput > 0){
-        printf("Nowa wiadomosc od clienta %d\n",th_data->descriptor);
+        //printf("Nowa wiadomosc od clienta %d\n",th_data->descriptor);
     }
     else{
         printf("Blad podczas odbioru wiadomosci");
     }
-    printf("Rejestracja uzytkownika LOGIN -> %s", buff);
+    //printf("Rejestracja uzytkownika LOGIN -> %s", buff);
 
     readOutput = read(th_data->descriptor, buff1, sizeof(buff1));
     password[countUsers] =  (char*)malloc(readOutput);
     //password[countUsers] = buff1;
     strcpy(password[countUsers],buff1);
 
-    printf("Rozmiar: %d", readOutput);
+    //printf("Rozmiar: %d", readOutput);
 
     if(readOutput > 0){
-        printf("Nowa wiadomosc od clienta %d\n",th_data->descriptor);
+        //printf("Nowa wiadomosc od clienta %d\n",th_data->descriptor);
     }
     else{
-        printf("Blad podczas odbioru wiadomosci");
+        //printf("Blad podczas odbioru wiadomosci");
     }
-    printf("Rejestracja uzytkownika HASLO-> %s", buff1);
+    //printf("Rejestracja uzytkownika HASLO-> %s", buff1);
 
     countUsers++;
     //printUsers();
@@ -199,10 +199,10 @@ void respondUsername(struct thread_data_t *th_data){
     int readOutput = write(th_data->descriptor, buff, sizeof(buff));
     
     if(readOutput > 0){
-        printf("Nowa wiadomosc dla clienta %d\n",th_data->descriptor);
+        //printf("Nowa wiadomosc dla clienta %d\n",th_data->descriptor);
     }
     else{
-        printf("Blad podczas odbioru wiadomosci");
+        //printf("Blad podczas odbioru wiadomosci");
     }
     
 }
@@ -227,7 +227,10 @@ void *ThreadBehavior(void *t_data)
 {
     pthread_detach(pthread_self());
     struct thread_data_t *th_data = (struct thread_data_t*)t_data;
-    char buff[BUF_SIZE];
+    char* buff = (char*)malloc(BUF_SIZE * sizeof(char));
+    char* buff1 = (char*)malloc(BUF_SIZE * sizeof(char));
+    char* buff2 = (char*)malloc(BUF_SIZE * sizeof(char));
+
     char* tmpCnt;
 
     //dostęp do pól struktury: (*th_data).pole
@@ -247,24 +250,24 @@ void *ThreadBehavior(void *t_data)
         sendResult(th_data,result);
 
         printUsers();
-        printf("Result int %d\n", result);
+        //printf("Result int %d\n", result);
         //FUNCTIONALITY
         if(result == 1){
-            puts("Udalo sie zalogowac\n");
+            //puts("Udalo sie zalogowac\n");
             readOutput = read(th_data->descriptor, buff, sizeof(buff));
             decision = atoi(buff);
 
 
             //add new topic
             if(decision == 1){
-                puts("Uzytkownik chce stworzyc temat\n");
+                //puts("Uzytkownik chce stworzyc temat\n");
                 addTopic(th_data);
-                puts("Temat pomyslnie dodany");
+                //puts("Temat pomyslnie dodany");
                 printTopics();
             }
             //sub topic
             else if(decision == 2){
-                puts("Uzytkownik chce sub temat\n");
+                //puts("Uzytkownik chce sub temat\n");
                 sprintf(tmpCnt, "%d",countTopic);
                 readOutput = write(th_data->descriptor, tmpCnt, sizeof(tmpCnt));
 
@@ -273,32 +276,32 @@ void *ThreadBehavior(void *t_data)
                 }
 
                 //read decyzje tematu
-                readOutput = read(th_data->descriptor, buff, sizeof(buff));
-                decision = atoi(buff);
+                readOutput = read(th_data->descriptor, buff2, sizeof(buff2));
+                decision = atoi(buff2);
 
                 //read komu przypisac
                 //char* buff3 = (char*)malloc(BUF_SIZE);
-                readOutput = read(th_data->descriptor, buff, sizeof(buff));
+                readOutput = read(th_data->descriptor, buff2, sizeof(buff2));
                 /*
                 char* buff2 = (char*)malloc(readOutput);
                 for(int i=0 ; i<readOutput-1;i++){
                     buff2[i] = buff[i];
                 }
                 */
-                int userIndex = returnIndex(buff);
+                int userIndex = returnIndex(buff2);
 
                 followTopic[userIndex][followCount[userIndex]] = decision - 1;
                 followCount[userIndex] += 1;
 
-                printf("Wybrany temat: %d\n", userIndex);
-                printf("Wybrany uzytkownik: %s\n", buff);
+                printf("Wybrany temat: %d\n", decision - 1);
+                printf("Wybrany uzytkownik: %s\n", buff2);
 
                 puts("Udalo sie!\n");
                 
             }
             //new post
             else if(decision == 3){
-                puts("Uzytkownik chce dodac posta\n");
+                //puts("Uzytkownik chce dodac posta\n");
                 sprintf(tmpCnt, "%d",countTopic);
                 readOutput = write(th_data->descriptor, tmpCnt, sizeof(tmpCnt));
 
@@ -310,7 +313,7 @@ void *ThreadBehavior(void *t_data)
                 readOutput = read(th_data->descriptor, buff, sizeof(buff));
                 decision = atoi(buff);
                 
-                printf("Wybrany temat: %d\n", decision);
+                //printf("Wybrany temat: %d\n", decision);
                 
                 addPost(th_data, decision);
 
@@ -318,11 +321,12 @@ void *ThreadBehavior(void *t_data)
             else if(decision == 4) {
                 //puts("Uzytkownik chce zobaczyc tablice\n");
 
-                readOutput = read(th_data->descriptor, buff, sizeof(buff));
-                int idxUser = returnIndex(buff);
+                readOutput = read(th_data->descriptor, buff1, sizeof(buff1));
+                //puts("Mordo\n");
+                int idxUser = returnIndex(buff1);
                 int flag = 1;
                 
-                printf("userndex: %d\n", idxUser);
+                //printf("userndex: %d\n", idxUser);
 
                 if(followCount[idxUser] == 0){
                     flag = 0;
