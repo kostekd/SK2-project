@@ -18,6 +18,7 @@
 #define MAX_USERS 100
 #define MAX_USER_LENGTH 100
 #define MAX_TOPIC 100
+#define MAX_POST 10
 
 //GLOBAL VARIABLES
 int followTopic[MAX_TOPIC][MAX_TOPIC];
@@ -25,6 +26,8 @@ int followCount[MAX_TOPIC];
 char* username[MAX_USERS];
 char* password[MAX_USERS];
 char* topic[MAX_TOPIC];
+char* posts[MAX_TOPIC][MAX_POST];
+int countPost[MAX_TOPIC];
 int countUsers = 0;
 int countTopic = 0;
 
@@ -37,18 +40,30 @@ struct thread_data_t
 void fillZeros(){
     for(int i=0 ; i<MAX_TOPIC ; i++){
         followCount[i] = 0;
+        countPost[i] = 0;
     }
 }
 
 int returnIndex(char* tmp){
+    int j = 0;
+    int flag = 1;
+    int index = -1;
     for(int i=0 ; i<countUsers ; i++){
-        printf("Porownywane: -%d-", strcmp(tmp,username[i]));
-        if(strcmp(tmp,username[i])==0){
-            return i;
+        j = 0;
+        flag = 1;
+        while(tmp[j]!='\n' && username[i][j]!= '\n'){
+            if(tmp[j] != username[i][j]){
+                flag = 0;
+                break;
+            }
+            j++;
+        }
+        if(flag == 1){
+            index = i;
+            break;
         }
     }
-
-    return -1;
+    return index;
 }
 
 //add topic to database
@@ -59,16 +74,25 @@ void addTopic(struct thread_data_t *th_data){
     int readOutput = read(th_data->descriptor, buff, BUF_SIZE);
 
     topic[countTopic] =  (char*)malloc(BUF_SIZE);
-    /*
-    for(int i=0 ; i<readOutput - 1 ; i++){
-        topic[countTopic][i] = buff[i];
-    }
-    */
+
     strcpy(topic[countTopic],buff);
 
     countTopic++;
 }
+void addPost(struct thread_data_t *th_data, int idx){
 
+    char* buff = (char*)malloc(BUF_SIZE * sizeof(char));
+
+    int readOutput = read(th_data->descriptor, buff, BUF_SIZE);
+
+    posts[idx - 1][countPost[idx - 1]] =  (char*)malloc(BUF_SIZE);
+
+    strcpy(posts[idx - 1][countPost[idx - 1]],buff);
+
+    printf("Dodany post: %s", posts[idx - 1][countPost[idx - 1]]);
+
+    countPost[idx - 1]++;
+}
 void printTopics(){
     printf("%d\n", countTopic);
     for(int i=0 ; i<countTopic ; i++){
@@ -138,11 +162,6 @@ void readUsername(struct thread_data_t *th_data){
     username[countUsers] =  (char*)malloc(readOutput);
     //username[countUsers] = buff;
     strcpy(username[countUsers],buff);
-    /*
-    for(int i=0 ; i<readOutput-1;i++){
-        username[countUsers][i] = buff[i];
-    }
-    */
 
     printf("Rozmiar: %d", readOutput);
 
@@ -158,11 +177,6 @@ void readUsername(struct thread_data_t *th_data){
     password[countUsers] =  (char*)malloc(readOutput);
     //password[countUsers] = buff1;
     strcpy(password[countUsers],buff1);
-    /*
-    for(int i=0 ; i<readOutput-1;i++){
-        password[countUsers][i] = buff1[i];
-    }
-    */
 
     printf("Rozmiar: %d", readOutput);
 
@@ -214,12 +228,12 @@ void *ThreadBehavior(void *t_data)
     pthread_detach(pthread_self());
     struct thread_data_t *th_data = (struct thread_data_t*)t_data;
     char buff[BUF_SIZE];
+    char* tmpCnt;
 
     //dostęp do pól struktury: (*th_data).pole
     //TODO (przy zadaniu 1) klawiatura -> wysyłanie albo odbieranie -> wyświetlanie
     int readOutput = read(th_data->descriptor, buff, sizeof(buff));
     int decision = atoi(buff);
-    printf("Decyzja INT: %d\n", decision);
 
     //REJESTRACJA
     if(decision == 1){
@@ -228,7 +242,6 @@ void *ThreadBehavior(void *t_data)
     }
     //LOGOWANIE
     else if(decision == 2){
-        printf("witamy w ifie \n");
         //CHECK IF EXISTS IN THE SYSTEM
         int result = readCurrentUser(th_data);
         sendResult(th_data,result);
@@ -252,9 +265,9 @@ void *ThreadBehavior(void *t_data)
             //sub topic
             else if(decision == 2){
                 puts("Uzytkownik chce sub temat\n");
-                char* tmpCnt;
                 sprintf(tmpCnt, "%d",countTopic);
                 readOutput = write(th_data->descriptor, tmpCnt, sizeof(tmpCnt));
+
                 for(int i=0 ; i<countTopic ; i++){
                     readOutput = write(th_data->descriptor, topic[i], BUF_SIZE);
                 }
@@ -264,16 +277,15 @@ void *ThreadBehavior(void *t_data)
                 decision = atoi(buff);
 
                 //read komu przypisac
-                char* buff3 = (char*)malloc(BUF_SIZE * sizeof(char));
-                readOutput = read(th_data->descriptor, buff3, sizeof(buff3));
+                //char* buff3 = (char*)malloc(BUF_SIZE);
+                readOutput = read(th_data->descriptor, buff, sizeof(buff));
                 /*
                 char* buff2 = (char*)malloc(readOutput);
-
                 for(int i=0 ; i<readOutput-1;i++){
                     buff2[i] = buff[i];
                 }
                 */
-                int userIndex = returnIndex(buff3);
+                int userIndex = returnIndex(buff);
 
                 followTopic[userIndex][followCount[userIndex]] = decision - 1;
                 followCount[userIndex] += 1;
@@ -282,6 +294,50 @@ void *ThreadBehavior(void *t_data)
                 printf("Wybrany uzytkownik: %s\n", buff);
 
                 puts("Udalo sie!\n");
+                
+            }
+            //new post
+            else if(decision == 3){
+                puts("Uzytkownik chce dodac posta\n");
+                sprintf(tmpCnt, "%d",countTopic);
+                readOutput = write(th_data->descriptor, tmpCnt, sizeof(tmpCnt));
+
+                for(int i=0 ; i<countTopic ; i++){
+                    readOutput = write(th_data->descriptor, topic[i], BUF_SIZE);
+                }
+
+                //read decyzje tematu
+                readOutput = read(th_data->descriptor, buff, sizeof(buff));
+                decision = atoi(buff);
+                
+                printf("Wybrany temat: %d\n", decision);
+                
+                addPost(th_data, decision);
+
+            }
+            else if(decision == 4) {
+                //puts("Uzytkownik chce zobaczyc tablice\n");
+
+                readOutput = read(th_data->descriptor, buff, sizeof(buff));
+                int idxUser = returnIndex(buff);
+                int flag = 1;
+                
+                printf("userndex: %d\n", idxUser);
+
+                if(followCount[idxUser] == 0){
+                    flag = 0;
+                }
+                
+                for(int i = 0 ; i < followCount[idxUser] ; i++){
+                    int topicIndex = followTopic[idxUser][i];
+                    readOutput = write(th_data->descriptor, topic[topicIndex], BUF_SIZE);
+
+                    
+                    for(int j=0 ; j< countPost[topicIndex] ; j++){
+                        readOutput = write(th_data->descriptor, posts[topicIndex][j], BUF_SIZE);
+                    }
+                    
+                }
                 
             }
             else{
