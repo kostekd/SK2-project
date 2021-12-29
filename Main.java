@@ -70,6 +70,7 @@ public class Main {
         byte[] buffer = new byte[7];
         byte[] number = new byte[2];
         byte[] topicString = new byte[100000];
+        byte[] postString = new byte[100000];
 
         System.out.println("Co chcesz teraz zrobic?");
         System.out.println("1.Rejestracja");
@@ -147,8 +148,8 @@ public class Main {
                         case 4:
                             System.out.println("Posty na twojej tablicy");
                             writer.println(username);
-                            is.read(topicString);
-                            System.out.println(convertToString(topicString));
+                            is.read(postString);
+                            System.out.println(trimString(convertToString(postString)));
                             break;
                     }
 
