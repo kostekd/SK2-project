@@ -20,8 +20,8 @@ public class Main {
         System.out.println("Co chcialbys teraz zrobic?");
         System.out.println("1.Dodaj nowy temat");
         System.out.println("2.Zaobserwuj nowy temat");
-        System.out.println("3.Pokaz swoja tablice");
-        System.out.println("4.Napisz posta");
+        System.out.println("3.Napisz posta");
+        System.out.println("4.Pokaz swoja tablice");
         System.out.println("Twoj wybor:");
     }
 
@@ -58,6 +58,7 @@ public class Main {
         String clientMessage = "";
         int firstChoice;
         int optionChoice;
+        int n;
         String tmpString = "";
         String username, password, topic;
 
@@ -115,7 +116,7 @@ public class Main {
                         case 2:
                             System.out.println("Lista tematow");
                             is.read(number);
-                            int n = trimNumber(convertToString(number));
+                            n = trimNumber(convertToString(number));
                             System.out.println(n);
                             is.read(topicString);
                             //System.out.println(convertToString(topicString));
@@ -125,6 +126,29 @@ public class Main {
                             writer.println(topic);
                             writer.println(username);
                             System.out.println("Done!");
+                            break;
+
+                        case 3:
+                            System.out.println("Lista tematow");
+                            is.read(number);
+                            n = trimNumber(convertToString(number));
+                            System.out.println(n);
+                            is.read(topicString);
+                            System.out.println(trimString(convertToString(topicString)));
+                            System.out.println("Ktory temat chcesz obserwowac(Podaj numer):");
+                            topic = scan.nextLine();
+                            writer.println(topic);
+                            System.out.println("Tresc posta:");
+                            topic = scan.nextLine();
+                            writer.println(topic);
+
+                            break;
+
+                        case 4:
+                            System.out.println("Posty na twojej tablicy");
+                            writer.println(username);
+                            is.read(topicString);
+                            System.out.println(convertToString(topicString));
                             break;
                     }
 
