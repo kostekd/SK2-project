@@ -4,9 +4,12 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+
+
 public class App {
 
     private JPanel first;
+    private JPanel second;
     private JTextArea password;
     private JTextArea login;
     private JRadioButton rejestracjaRadioButton;
@@ -27,16 +30,18 @@ public class App {
                     System.out.println("Cos tam");
                     logowanieRadioButton.setSelected(false);
                     JOptionPane.showMessageDialog(zatwierdzButton, "Logowanko!");
+                    MakeChoice.inteface();
 
-                }
+
+                }logowanieRadioButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        rejestracjaRadioButton.setSelected(false);
+                    }
+                });
             }
         });
-        logowanieRadioButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                rejestracjaRadioButton.setSelected(false);
-            }
-        });
+
         rejestracjaRadioButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
