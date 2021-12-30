@@ -12,7 +12,7 @@
 #include <time.h>
 #include <pthread.h>
 
-#define SERVER_PORT 1234
+#define SERVER_PORT 1235
 #define QUEUE_SIZE 5
 #define BUF_SIZE 100
 #define MAX_USERS 100
@@ -166,12 +166,12 @@ void readUsername(struct thread_data_t *th_data){
     //printf("Rozmiar: %d", readOutput);
 
     if(readOutput > 0){
-        //printf("Nowa wiadomosc od clienta %d\n",th_data->descriptor);
+        printf("Nowa wiadomosc od clienta %d\n",th_data->descriptor);
     }
     else{
         printf("Blad podczas odbioru wiadomosci");
     }
-    //printf("Rejestracja uzytkownika LOGIN -> %s", buff);
+    printf("Rejestracja uzytkownika LOGIN -> %s", buff);
 
     readOutput = read(th_data->descriptor, buff1, sizeof(buff1));
     password[countUsers] =  (char*)malloc(readOutput);
@@ -181,12 +181,12 @@ void readUsername(struct thread_data_t *th_data){
     //printf("Rozmiar: %d", readOutput);
 
     if(readOutput > 0){
-        //printf("Nowa wiadomosc od clienta %d\n",th_data->descriptor);
+        printf("Nowa wiadomosc od clienta %d\n",th_data->descriptor);
     }
     else{
-        //printf("Blad podczas odbioru wiadomosci");
+        printf("Blad podczas odbioru wiadomosci");
     }
-    //printf("Rejestracja uzytkownika HASLO-> %s", buff1);
+    printf("Rejestracja uzytkownika HASLO-> %s", buff1);
 
     countUsers++;
     //printUsers();
@@ -194,7 +194,7 @@ void readUsername(struct thread_data_t *th_data){
 }
 
 void respondUsername(struct thread_data_t *th_data){
-    char buff[11] = "Jebac Souse";
+    char buff[7] = "Success";
 
     int readOutput = write(th_data->descriptor, buff, sizeof(buff));
     
@@ -233,10 +233,16 @@ void *ThreadBehavior(void *t_data)
 
     char* tmpCnt;
 
+    puts("Witamy w serwerze");
+
     //dostęp do pól struktury: (*th_data).pole
     //TODO (przy zadaniu 1) klawiatura -> wysyłanie albo odbieranie -> wyświetlanie
     int readOutput = read(th_data->descriptor, buff, sizeof(buff));
     int decision = atoi(buff);
+
+    //readOutput = write(th_data->descriptor, buff, sizeof(buff));
+
+    printf("Decyzja %d", decision);
 
     //REJESTRACJA
     if(decision == 1){
@@ -260,7 +266,7 @@ void *ThreadBehavior(void *t_data)
 
             //add new topic
             if(decision == 1){
-                //puts("Uzytkownik chce stworzyc temat\n");
+                puts("Uzytkownik chce stworzyc temat\n");
                 addTopic(th_data);
                 //puts("Temat pomyslnie dodany");
                 printTopics();
@@ -301,7 +307,7 @@ void *ThreadBehavior(void *t_data)
             }
             //new post
             else if(decision == 3){
-                //puts("Uzytkownik chce dodac posta\n");
+                puts("Uzytkownik chce dodac posta");
                 sprintf(tmpCnt, "%d",countTopic);
                 readOutput = write(th_data->descriptor, tmpCnt, sizeof(tmpCnt));
 
