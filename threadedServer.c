@@ -11,8 +11,9 @@
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
+#include <ctype.h>
 
-#define SERVER_PORT 1235
+#define SERVER_PORT 1234
 #define QUEUE_SIZE 5
 #define BUF_SIZE 100
 #define MAX_USERS 100
@@ -37,6 +38,11 @@ struct thread_data_t
     int descriptor;
 };
 
+void changeUpper(char* tmp, int n){
+    for(int i=0 ; i<n ; i++){
+        tmp[i] = toupper(tmp[i]);
+    }
+}
 void fillZeros(){
     for(int i=0 ; i<MAX_TOPIC ; i++){
         followCount[i] = 0;
@@ -230,6 +236,8 @@ void *ThreadBehavior(void *t_data)
     char* buff = (char*)malloc(BUF_SIZE * sizeof(char));
     char* buff1 = (char*)malloc(BUF_SIZE * sizeof(char));
     char* buff2 = (char*)malloc(BUF_SIZE * sizeof(char));
+    char* buff3 = (char*)malloc(12 * sizeof(char));
+    buff3 = "Brak tematow";
 
     char* tmpCnt;
 
@@ -311,17 +319,23 @@ void *ThreadBehavior(void *t_data)
                 sprintf(tmpCnt, "%d",countTopic);
                 readOutput = write(th_data->descriptor, tmpCnt, sizeof(tmpCnt));
 
-                for(int i=0 ; i<countTopic ; i++){
-                    readOutput = write(th_data->descriptor, topic[i], BUF_SIZE);
-                }
+                if(countTopic > 0){
+                    
+                    for(int i=0 ; i<countTopic ; i++){
+                        readOutput = write(th_data->descriptor, topic[i], BUF_SIZE);
+                    }
 
-                //read decyzje tematu
-                readOutput = read(th_data->descriptor, buff, sizeof(buff));
-                decision = atoi(buff);
-                
-                //printf("Wybrany temat: %d\n", decision);
-                
-                addPost(th_data, decision);
+                    //read decyzje tematu
+                    readOutput = read(th_data->descriptor, buff, sizeof(buff));
+                    decision = atoi(buff);
+                    
+                    //printf("Wybrany temat: %d\n", decision);
+                    
+                    addPost(th_data, decision);
+                }
+                else{
+                    readOutput = write(th_data->descriptor, buff3, 12);
+                }
 
             }
             else if(decision == 4) {
@@ -340,6 +354,7 @@ void *ThreadBehavior(void *t_data)
                 
                 for(int i = 0 ; i < followCount[idxUser] ; i++){
                     int topicIndex = followTopic[idxUser][i];
+                    changeUpper(topic[topicIndex], BUF_SIZE);
                     readOutput = write(th_data->descriptor, topic[topicIndex], BUF_SIZE);
 
                     
