@@ -16,6 +16,15 @@ public class CheckPosts {
     byte[] postString = new byte[100000];
     int n;
 
+    public static boolean checkUpper(String myStr){
+        boolean flag = true;
+        for(int i=0 ; i<myStr.length() - 1; i++){
+            if(!Character.isUpperCase(myStr.charAt(i)) && myStr.charAt(i) != ' '){
+                flag = false;
+            }
+        }
+        return flag;
+    }
     public static int trimNumber(String tmp) {
         String result = "";
         for(int i=0 ; i<tmp.length() ; i++){
@@ -27,18 +36,26 @@ public class CheckPosts {
     }
 
     public static String trimString(String tmp){
-        String result = "1.";
+        String result = "";
+        String tmpResult = "";
         int cnt = 1;
         for(int i=0 ; i<tmp.length() ; i++){
             if((int)tmp.charAt(i) != 0){
-                result += tmp.charAt(i);
+                tmpResult += tmp.charAt(i);
                 if(tmp.charAt(i) == '\n'){
-                    cnt++;
-                    result += Integer.toString(cnt) + '.';
+                    if(checkUpper(tmpResult)){
+                        result += "Temat: " + tmpResult;
+                        tmpResult = "";
+                    }
+                    else{
+                        result += tmpResult;
+                        tmpResult = "";
+                    }
+
                 }
             }
         }
-        result = result.substring(0,result.length() - 3);
+        result = result.substring(0,result.length());
         return result;
     }
 

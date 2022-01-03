@@ -40,7 +40,7 @@ public class App {
 
     public App(JFrame frame) throws IOException{
 
-        Socket clientSocket = new Socket("localhost", 1235);
+        Socket clientSocket = new Socket("localhost", 1234);
         BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
         InputStream is = clientSocket.getInputStream();
@@ -97,6 +97,7 @@ public class App {
                         writer.println(login.getText());
                         writer.println(password.getText());
                         System.out.println(password.getText());
+
                         try {
                             is.read(buffer);
                         } catch (IOException ex) {
@@ -105,6 +106,8 @@ public class App {
 
                         nickname = login.getText();
                         //zamknij jakos okienko
+                        frame.dispose();
+
                     }
                     JOptionPane.showMessageDialog(zatwierdzButton, convertToString(buffer));
                     try {

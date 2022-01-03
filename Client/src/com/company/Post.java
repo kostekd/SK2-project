@@ -12,7 +12,6 @@ public class Post {
     private JTextArea textArea1;
     private JLabel zapytaj;
     private JTextField textField1;
-    private JButton zatwierdz;
     private JLabel zapytaj1;
     private JTextField nowyPost;
     private JButton wyslij;
