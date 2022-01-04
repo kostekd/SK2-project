@@ -50,7 +50,6 @@ public class App {
             public void actionPerformed(ActionEvent e) {
                 if(rejestracjaRadioButton.isSelected()){
                     firstChoice = Integer.valueOf("1");
-                    writer.println(firstChoice);
                     System.out.println("Jest selected");
 
                     System.out.println(buffer);
@@ -58,6 +57,7 @@ public class App {
 
                     rejestracjaRadioButton.setSelected(false);
                     if(!login.getText().equals("") && !password.getText().equals("")){
+                        writer.println(firstChoice);
                         System.out.println(login.getText());
                         writer.println(login.getText());
                         writer.println(password.getText());
@@ -78,16 +78,8 @@ public class App {
 
                     }
 
-                    else{
-                        System.out.println("Jebac");
-                    }
-
-
-                    JOptionPane.showMessageDialog(zatwierdzButton, convertToString(buffer));
-
                 }
                 if(logowanieRadioButton.isSelected()){
-                    System.out.println("Cos tam");
 
                     logowanieRadioButton.setSelected(false);
                     if(!login.getText().equals("") && !password.getText().equals("")){
@@ -105,15 +97,19 @@ public class App {
                         }
 
                         nickname = login.getText();
-                        //zamknij jakos okienko
                         frame.dispose();
 
                     }
                     JOptionPane.showMessageDialog(zatwierdzButton, convertToString(buffer));
-                    try {
-                        MakeChoice.inteface(clientSocket, nickname);
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
+                    if(convertToString(buffer).equals("Success")) {
+                        try {
+                            MakeChoice.inteface(clientSocket, nickname);
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                    else{
+                        System.exit(0);
                     }
 
 
