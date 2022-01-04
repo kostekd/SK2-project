@@ -135,12 +135,7 @@ int readCurrentUser(struct thread_data_t *th_data){
     int readOutput = read(th_data->descriptor, buff, sizeof(buff));
     char* login = (char*)malloc(readOutput);
     strcpy(login,buff);
-    // SPRAWDZAMY CZY readOutput dziala
-    /*
-    for(int i=0 ; i<readOutput-1;i++){
-        login[i]= buff[i];
-    }
-    */
+
 
     readOutput = read(th_data->descriptor, buff1, sizeof(buff1));
     char* pass = (char*)malloc(readOutput);
@@ -166,10 +161,9 @@ void readUsername(struct thread_data_t *th_data){
 
     //tutaj funkcja co sprawdza czy moze byc taki nick
     username[countUsers] =  (char*)malloc(readOutput);
-    //username[countUsers] = buff;
+
     strcpy(username[countUsers],buff);
 
-    //printf("Rozmiar: %d", readOutput);
 
     if(readOutput > 0){
         printf("Nowa wiadomosc od clienta %d\n",th_data->descriptor);
@@ -181,10 +175,8 @@ void readUsername(struct thread_data_t *th_data){
 
     readOutput = read(th_data->descriptor, buff1, sizeof(buff1));
     password[countUsers] =  (char*)malloc(readOutput);
-    //password[countUsers] = buff1;
     strcpy(password[countUsers],buff1);
 
-    //printf("Rozmiar: %d", readOutput);
 
     if(readOutput > 0){
         printf("Nowa wiadomosc od clienta %d\n",th_data->descriptor);
@@ -195,7 +187,6 @@ void readUsername(struct thread_data_t *th_data){
     printf("Rejestracja uzytkownika HASLO-> %s", buff1);
 
     countUsers++;
-    //printUsers();
     
 }
 
@@ -205,10 +196,10 @@ void respondUsername(struct thread_data_t *th_data){
     int readOutput = write(th_data->descriptor, buff, sizeof(buff));
     
     if(readOutput > 0){
-        //printf("Nowa wiadomosc dla clienta %d\n",th_data->descriptor);
+        printf("Nowa wiadomosc dla clienta %d\n",th_data->descriptor);
     }
     else{
-        //printf("Blad podczas odbioru wiadomosci");
+        printf("Blad podczas odbioru wiadomosci");
     }
     
 }
@@ -243,14 +234,9 @@ void *ThreadBehavior(void *t_data)
 
     puts("Witamy w serwerze");
 
-    //dostęp do pól struktury: (*th_data).pole
-    //TODO (przy zadaniu 1) klawiatura -> wysyłanie albo odbieranie -> wyświetlanie
     int readOutput = read(th_data->descriptor, buff, sizeof(buff));
     int decision = atoi(buff);
 
-    //readOutput = write(th_data->descriptor, buff, sizeof(buff));
-
-    printf("Decyzja %d", decision);
 
     //REJESTRACJA
     if(decision == 1){
@@ -264,10 +250,8 @@ void *ThreadBehavior(void *t_data)
         sendResult(th_data,result);
 
         printUsers();
-        //printf("Result int %d\n", result);
         //FUNCTIONALITY
         if(result == 1){
-            //puts("Udalo sie zalogowac\n");
             readOutput = read(th_data->descriptor, buff, sizeof(buff));
             decision = atoi(buff);
 
@@ -276,41 +260,45 @@ void *ThreadBehavior(void *t_data)
             if(decision == 1){
                 puts("Uzytkownik chce stworzyc temat\n");
                 addTopic(th_data);
-                //puts("Temat pomyslnie dodany");
                 printTopics();
             }
             //sub topic
             else if(decision == 2){
-                //puts("Uzytkownik chce sub temat\n");
                 sprintf(tmpCnt, "%d",countTopic);
                 readOutput = write(th_data->descriptor, tmpCnt, sizeof(tmpCnt));
 
-                for(int i=0 ; i<countTopic ; i++){
-                    readOutput = write(th_data->descriptor, topic[i], BUF_SIZE);
+                if(countTopic > 0){
+
+                    for(int i=0 ; i<countTopic ; i++){
+                        readOutput = write(th_data->descriptor, topic[i], BUF_SIZE);
+                    }
+
+                    //read decyzje tematu
+                    readOutput = read(th_data->descriptor, buff2, sizeof(buff2));
+                    decision = atoi(buff2);
+
+                    //read komu przypisac
+                    //char* buff3 = (char*)malloc(BUF_SIZE);
+                    readOutput = read(th_data->descriptor, buff2, sizeof(buff2));
+                    /*
+                    char* buff2 = (char*)malloc(readOutput);
+                    for(int i=0 ; i<readOutput-1;i++){
+                        buff2[i] = buff[i];
+                    }
+                    */
+                    int userIndex = returnIndex(buff2);
+
+                    followTopic[userIndex][followCount[userIndex]] = decision - 1;
+                    followCount[userIndex] += 1;
+
+                    printf("Wybrany temat: %d\n", decision - 1);
+                    printf("Wybrany uzytkownik: %s\n", buff2);
+
+                    puts("Udalo sie!\n");
                 }
-
-                //read decyzje tematu
-                readOutput = read(th_data->descriptor, buff2, sizeof(buff2));
-                decision = atoi(buff2);
-
-                //read komu przypisac
-                //char* buff3 = (char*)malloc(BUF_SIZE);
-                readOutput = read(th_data->descriptor, buff2, sizeof(buff2));
-                /*
-                char* buff2 = (char*)malloc(readOutput);
-                for(int i=0 ; i<readOutput-1;i++){
-                    buff2[i] = buff[i];
+                else{
+                    readOutput = write(th_data->descriptor, buff3, 12);
                 }
-                */
-                int userIndex = returnIndex(buff2);
-
-                followTopic[userIndex][followCount[userIndex]] = decision - 1;
-                followCount[userIndex] += 1;
-
-                printf("Wybrany temat: %d\n", decision - 1);
-                printf("Wybrany uzytkownik: %s\n", buff2);
-
-                puts("Udalo sie!\n");
                 
             }
             //new post
@@ -339,29 +327,28 @@ void *ThreadBehavior(void *t_data)
 
             }
             else if(decision == 4) {
-                //puts("Uzytkownik chce zobaczyc tablice\n");
+                puts("Uzytkownik chce zobaczyc tablice\n");
 
                 readOutput = read(th_data->descriptor, buff1, sizeof(buff1));
-                //puts("Mordo\n");
                 int idxUser = returnIndex(buff1);
                 int flag = 1;
-                
-                //printf("userndex: %d\n", idxUser);
 
-                if(followCount[idxUser] == 0){
+                if(followCount[idxUser] > 0){
                     flag = 0;
-                }
-                
-                for(int i = 0 ; i < followCount[idxUser] ; i++){
-                    int topicIndex = followTopic[idxUser][i];
-                    changeUpper(topic[topicIndex], BUF_SIZE);
-                    readOutput = write(th_data->descriptor, topic[topicIndex], BUF_SIZE);
+                    for(int i = 0 ; i < followCount[idxUser] ; i++){
+                        int topicIndex = followTopic[idxUser][i];
+                        changeUpper(topic[topicIndex], BUF_SIZE);
+                        readOutput = write(th_data->descriptor, topic[topicIndex], BUF_SIZE);
 
-                    
-                    for(int j=0 ; j< countPost[topicIndex] ; j++){
-                        readOutput = write(th_data->descriptor, posts[topicIndex][j], BUF_SIZE);
+                        
+                        for(int j=0 ; j< countPost[topicIndex] ; j++){
+                            readOutput = write(th_data->descriptor, posts[topicIndex][j], BUF_SIZE);
+                        }
+                        
                     }
-                    
+                }
+                else{
+                    readOutput = write(th_data->descriptor, buff3, 12);
                 }
                 
             }
@@ -416,6 +403,8 @@ int main(int argc, char* argv[])
    int listen_result;
    char reuse_addr_val = 1;
    struct sockaddr_in server_address;
+
+   epoll_create1(0);
 
    //inicjalizacja gniazda serwera
    
